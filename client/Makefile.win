@@ -1,0 +1,12 @@
+CC = g++
+CFLAGS = -std=c++11 -Wall -Wextra -I../shared
+TARGET = client.exe
+LIBS = -lws2_32
+
+all: $(TARGET)
+
+$(TARGET): client.cpp
+	$(CC) $(CFLAGS) -o $(TARGET) client.cpp $(LIBS)
+
+clean:
+	del $(TARGET)
