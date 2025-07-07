@@ -1,0 +1,21 @@
+# Compiled binaries
+server/server
+client/client
+
+# Build artifacts
+*.o
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
