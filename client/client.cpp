@@ -107,7 +107,21 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::cout << "Connected to server. Type your messages or /sendfile <filename> to send a file." << std::endl;
+    // Get username from user
+    std::string username;
+    std::cout << "Enter your username: ";
+    std::getline(std::cin, username);
+    
+    // Send username to server
+    char message[BUFFER_SIZE];
+    int message_type = USERNAME_SET;
+    int username_length = (int)username.size();
+    memcpy(message, &message_type, sizeof(int));
+    memcpy(message + sizeof(int), &username_length, sizeof(int));
+    memcpy(message + sizeof(int) * 2, username.c_str(), username_length);
+    send(client_socket, message, sizeof(int) * 2 + username_length, 0);
+
+    std::cout << "Connected to server as '" << username << "'. Type your messages or /sendfile <filename> to send a file." << std::endl;
 
     // Create thread data
     ThreadData thread_data;

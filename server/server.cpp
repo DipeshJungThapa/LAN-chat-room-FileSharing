@@ -10,16 +10,33 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
-std::vector<SOCKET> clients;
+struct ClientInfo {
+    SOCKET socket;
+    std::string username;
+    
+    ClientInfo(SOCKET s, const std::string& name) : socket(s), username(name) {}
+};
+
+std::vector<ClientInfo> clients;
 CRITICAL_SECTION clients_mutex;
 
-void broadcast(SOCKET sender, const std::string& message) {
+void broadcast(SOCKET sender, const std::string& message, const std::string& sender_username) {
+    EnterCriticalSection(&clients_mutex);
+    std::string formatted_message = sender_username + ": " + message;
+    for (size_t i = 0; i < clients.size(); i++) {
+        ClientInfo& client = clients[i];
+        if (client.socket != sender) {
+            send(client.socket, formatted_message.c_str(), (int)formatted_message.size(), 0);
+        }
+    }
+    LeaveCriticalSection(&clients_mutex);
+}
+
+void broadcast_notification(const std::string& notification) {
     EnterCriticalSection(&clients_mutex);
     for (size_t i = 0; i < clients.size(); i++) {
-        SOCKET client = clients[i];
-        if (client != sender) {
-            send(client, message.c_str(), (int)message.size(), 0);
-        }
+        ClientInfo& client = clients[i];
+        send(client.socket, notification.c_str(), (int)notification.size(), 0);
     }
     LeaveCriticalSection(&clients_mutex);
 }
@@ -53,25 +70,51 @@ struct ThreadData {
 DWORD WINAPI handle_client(LPVOID lpParam) {
     ThreadData* data = (ThreadData*)lpParam;
     SOCKET client_socket = data->client_socket;
+    std::string username = "Unknown";
     
-    EnterCriticalSection(&clients_mutex);
-    clients.push_back(client_socket);
-    LeaveCriticalSection(&clients_mutex);
-
     char buffer[BUFFER_SIZE];
+    
+    // First, receive username
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
+    if (bytes_received <= 0) {
+        closesocket(client_socket);
+        delete data;
+        return 0;
+    }
+    
+    int message_type;
+    memcpy(&message_type, buffer, sizeof(int));
+    
+    if (message_type == USERNAME_SET) {
+        int username_length;
+        memcpy(&username_length, buffer + sizeof(int), sizeof(int));
+        username = std::string(buffer + sizeof(int) * 2, username_length);
+        
+        // Add client to list
+        EnterCriticalSection(&clients_mutex);
+        clients.push_back(ClientInfo(client_socket, username));
+        LeaveCriticalSection(&clients_mutex);
+        
+        std::cout << "New client connected: " << username << std::endl;
+        
+        // Notify all other clients
+        std::string notification = "*** " + username + " joined the chat ***";
+        broadcast_notification(notification);
+    }
+
+    // Main message loop
     while (true) {
-        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
+        bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
         if (bytes_received <= 0) {
             break;
         }
 
-        int message_type;
         memcpy(&message_type, buffer, sizeof(int));
 
         if (message_type == MESSAGE) {
             std::string message(buffer + sizeof(int), bytes_received - sizeof(int));
-            std::cout << "Received message: " << message << std::endl;
-            broadcast(client_socket, message);
+            std::cout << username << ": " << message << std::endl;
+            broadcast(client_socket, message, username);
         } 
         else if (message_type == FILE_TRANSFER) {
             int filename_length;
@@ -84,15 +127,31 @@ DWORD WINAPI handle_client(LPVOID lpParam) {
             std::string ack = "READY";
             send(client_socket, ack.c_str(), (int)ack.size(), 0);
             handle_file_transfer(client_socket, filename, file_size);
+            
+            // Notify all clients about file transfer
+            std::string notification = "*** " + username + " shared a file: " + filename + " ***";
+            broadcast_notification(notification);
         }
     }
 
+    // Remove client from list and notify others
     EnterCriticalSection(&clients_mutex);
-    clients.erase(std::remove(clients.begin(), clients.end(), client_socket), clients.end());
+    for (size_t i = 0; i < clients.size(); i++) {
+        if (clients[i].socket == client_socket) {
+            clients.erase(clients.begin() + i);
+            break;
+        }
+    }
     LeaveCriticalSection(&clients_mutex);
     
+    std::cout << username << " disconnected" << std::endl;
+    
+    // Notify all other clients
+    std::string notification = "*** " + username + " left the chat ***";
+    broadcast_notification(notification);
+    
     closesocket(client_socket);
-    delete data;  // Clean up thread data
+    delete data;
     return 0;
 }
 
