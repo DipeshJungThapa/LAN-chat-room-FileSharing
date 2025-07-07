@@ -19,3 +19,4 @@ client/client
 .Trashes
 ehthumbs.db
 Thumbs.db
+*.txt
