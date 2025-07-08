@@ -232,10 +232,10 @@ Potential improvements for the project:
 
 ## License
 
-This project is created for educational purposes as part of a networking course assignment.
+This project is created for educational purposes as part of a networking programming course assignment.
 
 ---
 
 **Created by**: Aryam Ghimire and Dipesh Thapa  
-**Course**: Computer Networks  
+**Course**: Network Programming
 **Date**: 2025
