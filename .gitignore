@@ -1,9 +1,26 @@
 # Compiled binaries
 server/server
+server/server.exe
 client/client
+client/client.exe
 
 # Build artifacts
 *.o
+*.obj
+
+# Backup and log files
+*.backup
+*.bak
+*.log
+*~
+
+# Test files
+test_input.txt
+test_file.txt
+test.sh
+
+# Uploads directory
+server/uploads/
 
 # Editor files
 .vscode/
@@ -19,4 +36,3 @@ client/client
 .Trashes
 ehthumbs.db
 Thumbs.db
-*.txt

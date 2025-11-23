@@ -1,6 +1,6 @@
-# LAN Chat Room with File Transfer (Windows Version)
+# LAN Chat Room with File Transfer
 
-A terminal-based chat application for Windows that allows multiple clients to communicate over a Local Area Network (LAN) and transfer files seamlessly.
+A terminal-based chat application that allows multiple clients to communicate over a Local Area Network (LAN) and transfer files seamlessly. Now with cross-platform support!
 
 ## Project Members
 - **Aryam Ghimire**
@@ -11,86 +11,51 @@ A terminal-based chat application for Windows that allows multiple clients to co
 This is a multi-client chat room application built in C++ that enables real-time communication between multiple users connected to the same network. The application features a client-server architecture where one machine acts as the server hosting the chat room, and other machines connect as clients to participate in the conversation.
 
 ### Key Features
-- **Multi-client support**: Multiple users can join the same chat room simultaneously
+- **Multi-client support**: Up to 100 users can join the chat room simultaneously
 - **Real-time messaging**: Messages are instantly broadcast to all connected clients
 - **Username system**: Each user sets a unique username when joining
 - **File sharing**: Users can send files to the server and notify other participants
 - **Join/leave notifications**: Automatic notifications when users join or leave the chat
-- **Windows-optimized**: Built specifically for Windows using MinGW compiler
-
-## Project Structure
-
-```
-LAN-chat-room-FileSharing/
-├── client/
-│   ├── client.cpp          # Client application source code
-│   ├── client.exe          # Compiled client executable
-│   └── Makefile.win        # Build configuration for client
-├── server/
-│   ├── server.cpp          # Server application source code
-│   ├── server.exe          # Compiled server executable
-│   └── Makefile.win        # Build configuration for server
-├── shared/
-│   └── constants.h         # Shared constants and configuration
-└── README.md              # This file
-```
-
-## File Responsibilities
-
-### Client Files
-- **`client.cpp`**: Main client application that handles:
-  - Connecting to the server
-  - Username setup and registration
-  - Sending and receiving messages
-  - File transfer functionality
-  - User interface for chat interaction
-
-- **`client.exe`**: Compiled executable that users run to join the chat room
-
-### Server Files
-- **`server.cpp`**: Server application that manages:
-  - Accepting multiple client connections
-  - Broadcasting messages between clients
-  - Handling file transfers and storage
-  - Managing user sessions and usernames
-  - Coordinating chat room activities
-
-- **`server.exe`**: Compiled server executable that hosts the chat room
-
-### Shared Files
-- **`constants.h`**: Configuration file containing:
-  - Server port number (default: 8080)
-  - Buffer sizes for messages and files
-  - Message type definitions
-  - Maximum client limits
-
-### Build Files
-- **`Makefile.win`**: Build configuration files for compiling the applications using MinGW
+- **Cross-platform**: Works on Linux, macOS, and Windows
 
 ## Prerequisites
 
-Before running the application, ensure you have:
+### Linux
+```bash
+sudo apt install build-essential g++ make
+```
 
-- **Windows Operating System**
-- **MinGW-w64** installed with g++ compiler
-- **Basic network connectivity** between machines on the same LAN
-- **Firewall permissions** for the applications (if prompted)
+### macOS
+```bash
+xcode-select --install
+```
+
+### Windows
+- **MinGW-w64** or **MSYS2** with g++ compiler
 
 ## Building the Application
 
-### 1. Build the Server
+### Linux/macOS
 ```bash
+# Build server
 cd server
-mingw32-make -f Makefile.win
-```
+make
 
-### 2. Build the Client
-```bash
+# Build client
 cd client
-mingw32-make -f Makefile.win
+make
 ```
 
-**Note**: You may see harmless warnings about `#pragma comment` - these can be ignored as the compilation will succeed.
+### Windows
+```bash
+# Build server
+cd server
+mingw32-make
+
+# Build client
+cd client
+mingw32-make
+```
 
 ## Running the Application
 
@@ -98,7 +63,7 @@ mingw32-make -f Makefile.win
 On the machine that will host the chat room:
 ```bash
 cd server
-./server.exe
+./server
 ```
 
 You should see:
@@ -110,18 +75,33 @@ Server started. Listening on port 8080
 On each machine that wants to join the chat:
 ```bash
 cd client
-./client.exe <server_ip_address>
+./client <server_ip_address>
 ```
 
 **Examples:**
-- Same machine: `./client.exe 127.0.0.1`
-- Different machine: `./client.exe 192.168.1.100`
+- Same machine: `./client 127.0.0.1`
+- Different machine: `./client 192.168.1.100`
 
 ### Step 3: Set Username
 When prompted, enter your desired username:
 ```
 Enter your username: Alice
-Connected to server as 'Alice'. Type your messages or /sendfile <filename> to send a file.
+```
+
+You will see:
+```
+✓ Logged in as 'Alice'
+
+╔════════════════════════════════════════════════╗
+║              Available Commands                ║
+╠════════════════════════════════════════════════╣
+║ /help               - Show this help message   ║
+║ /sendfile <path>    - Send a file to server    ║
+║ /quit or /exit      - Disconnect from server   ║
+║ Any other text      - Send as chat message     ║
+╚════════════════════════════════════════════════╝
+
+> 
 ```
 
 ## Using the Chat Room
@@ -129,24 +109,47 @@ Connected to server as 'Alice'. Type your messages or /sendfile <filename> to se
 ### Basic Messaging
 Simply type your message and press Enter:
 ```
-Hello everyone!
+> Hello everyone!
 ```
 
 Other users will see:
 ```
-Alice: Hello everyone!
+14:25:30 [Alice]: Hello everyone!
+```
+
+### Available Commands
+
+**Get Help:**
+```
+> /help
+```
+
+**Send a File:**
+```
+> /sendfile /path/to/file.txt
+> /sendfile ~/Documents/photo.jpg
+> /sendfile C:\Users\Alice\file.pdf
+```
+
+**Disconnect:**
+```
+> /quit
 ```
 
 ### File Sharing
-To send a file, use the `/sendfile` command:
+When you send a file, you'll see progress:
 ```
-/sendfile C:\path\to\your\file.txt
+Uploading file.txt (1024000 bytes)...
+Progress: 100% (1024000/1024000 bytes)
+✓ File sent: file.txt (1024000 bytes, 45.2 MB/s)
 ```
 
-Other users will be notified:
+All users will be notified:
 ```
-*** Alice shared a file: file.txt ***
+*** Alice shared file: file.txt ***
 ```
+
+Files are saved in the `server/uploads/` directory.
 
 ### System Notifications
 The chat room automatically shows when users join or leave:
@@ -162,16 +165,28 @@ The chat room automatically shows when users join or leave:
 3. **Username Registration**: Each client sends their chosen username to the server
 4. **Message Broadcasting**: When a client sends a message, the server broadcasts it to all other connected clients
 5. **File Transfer**: Files are sent to the server and stored locally, with notifications sent to all clients
-6. **Thread Management**: The server uses Windows threads to handle multiple clients simultaneously
+6. **Thread Management**: The server uses C++ threads to handle multiple clients simultaneously
 
 ## Network Configuration
 
 ### Finding Your IP Address
-To find your machine's IP address for others to connect:
+
+**Linux:**
+```bash
+hostname -I
+```
+
+**macOS:**
+```bash
+ipconfig getifaddr en0
+```
+
+**Windows:**
 ```bash
 ipconfig
 ```
-Look for the "IPv4 Address" under your active network adapter.
+
+Look for the IPv4 address (usually starts with 192.168.x.x for local networks).
 
 ### Port Configuration
 The default port is 8080. To change it:
@@ -190,52 +205,23 @@ The default port is 8080. To change it:
 
 **"Bind failed"**
 - Port 8080 might be in use
-- Try changing the port in `constants.h`
+- Try changing the port in `shared/constants.h`
 
-**"WSAStartup failed"**
-- Windows networking issue
-- Restart the application
-- Check network adapter settings
-
-### File Transfer Issues
-- Use full file paths: `C:\Users\YourName\Documents\file.txt`
+**File Transfer Issues**
+- Use full file paths
 - Ensure file exists and is readable
 - Check available disk space on server machine
 
 ## Technical Details
-
-- **Language**: C++11
-- **Compiler**: MinGW-w64 GCC
-- **Networking**: Windows Sockets (Winsock2)
-- **Threading**: Windows API (CreateThread)
+- **Language**: C++17
+- **Compiler**: GCC/Clang/MinGW
+- **Networking**: BSD Sockets / Winsock2
+- **Threading**: C++ std::thread
 - **Architecture**: Client-Server model
 - **Protocol**: TCP/IP
-
-## Limitations
-
-- Windows-only (uses Windows-specific APIs)
-- Files are stored on server machine only
-- No message history or persistence
-- No encryption (messages sent in plain text)
-- Limited to local network connections
-
-## Future Enhancements
-
-Potential improvements for the project:
-- Cross-platform compatibility (Linux/macOS)
-- Message encryption for security
-- File broadcasting to all clients
-- Chat history and logging
-- User authentication system
-- Graphical user interface (GUI)
-- Private messaging between users
-
-## License
-
-This project is created for educational purposes as part of a networking programming course assignment.
 
 ---
 
 **Created by**: Aryam Ghimire and Dipesh Thapa  
-**Course**: Network Programming
+**Course**: Network Programming  
 **Date**: 2025

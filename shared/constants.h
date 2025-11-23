@@ -1,13 +1,27 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-const int PORT = 8080;
-const int BUFFER_SIZE = 1024;
-const int MAX_CLIENTS = 10;
-const int FILE_BUFFER_SIZE = 4096;
+#include <cstdint>
 
-const int MESSAGE = 1;
-const int FILE_TRANSFER = 2;
-const int USERNAME_SET = 3;
+// Network configuration
+constexpr int PORT = 8080;
+constexpr int BUFFER_SIZE = 4096;          // Increased for better performance
+constexpr int MAX_CLIENTS = 100;           // Support more clients
+constexpr int FILE_BUFFER_SIZE = 65536;    // 64KB for faster file transfers
+constexpr int MAX_USERNAME_LENGTH = 32;
+constexpr int MAX_MESSAGE_LENGTH = 2048;
+
+// Message types
+enum MessageType : int32_t {
+    MESSAGE = 1,
+    FILE_TRANSFER = 2,
+    USERNAME_SET = 3,
+    DISCONNECT = 4,
+    PING = 5,
+    CLIENT_LIST = 6
+};
+
+// Protocol constants
+constexpr int PROTOCOL_VERSION = 2;
 
 #endif
